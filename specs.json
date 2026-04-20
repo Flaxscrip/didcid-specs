@@ -4,7 +4,7 @@
       "title": "did:cid Method Specification",
       "spec_directory": "./markdown",
       "output_path": "./build",
-      "logo": "../assets/archon-logo.png",
+      "logo": "https://bafybeib62s3p5vuxaifne4jtkitcvyjfi2yqylxd2psg3pfitw2yzrfqwq.ipfs.dweb.link/?filename=A_black72.png",
       "logo_link": "https://github.com/archetech/archon",
       "markdown_paths": [
         "header.md",
