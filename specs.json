@@ -1,17 +1,40 @@
 {
-  "spec_directory": "markdown",
-  "title": "Archon Core Specification",
-  "logo": "https://archon.technology/logo.png",
-  "markdown_paths": [
-    "00-introduction.md",
-    "01-scheme.md",
-    "02-architecture.md",
-    "03-credentials.md"
-  ],
-  "katex": true,
-  "output_path": "archon-core-spec.html",
-  "source": {
-    "repo": "https://github.com/archetech/archon",
-    "branch": "main"
-  }
+  "specs": [
+    {
+      "title": "did:cid Method Specification",
+      "spec_directory": "./markdown",
+      "output_path": "./build",
+      "logo": "../assets/archon-logo.png",
+      "logo_link": "https://github.com/archetech/archon",
+      "markdown_paths": [
+        "header.md",
+        "abstract.md",
+        "did-format.md",
+        "lifecycle.md",
+        "creation.md",
+        "update.md",
+        "revocation.md",
+        "resolution.md",
+        "proof-verification.md",
+        "recovery.md"
+      ],
+      "source": {
+        "host": "github",
+        "account": "flaxscrip",
+        "repo": "didcid-specs"
+      },
+      "external_specs": [
+        {
+          "DID-CORE": "https://www.w3.org/TR/did-core/"
+        },
+        {
+          "VC-DATA-MODEL": "https://www.w3.org/TR/vc-data-model-2.0/"
+        },
+        {
+          "CID": "https://github.com/multiformats/cid"
+        }
+      ],
+      "katex": true
+    }
+  ]
 }
