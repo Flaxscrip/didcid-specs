@@ -1,0 +1,167 @@
+## DID Document
+
+A `did:cid` resolution response conforms to the [[ref: DID-CORE]] document set structure and returns four top-level components:
+
+```json
+{
+  "didDocument": { ... },
+  "didDocumentMetadata": { ... },
+  "didDocumentData": { ... },
+  "didDocumentRegistration": { ... }
+}
+```
+
+`didDocumentData` and `didDocumentRegistration` are Archon extensions described in the Archon Extensions to DID Core section. The `didDocument` and `didDocumentMetadata` structures conform to [[ref: DID-CORE]].
+
+---
+
+### Agent DID Document
+
+A resolved [[ref: agent]] DID document includes a verification method and the standard DID Core verification relationships:
+
+```json
+{
+  "didDocument": {
+    "@context": ["https://www.w3.org/ns/did/v1"],
+    "id": "did:cid:bafkreig6rjxbv2aopv47dgxhnxepqpb4yrxf2nvzrhmhdqthojfdxuxjbe",
+    "verificationMethod": [
+      {
+        "id": "#key-1",
+        "controller": "did:cid:bafkreig6rjxbv2aopv47dgxhnxepqpb4yrxf2nvzrhmhdqthojfdxuxjbe",
+        "type": "EcdsaSecp256k1VerificationKey2019",
+        "publicKeyJwk": {
+          "kty": "EC",
+          "crv": "secp256k1",
+          "x": "LRrQabMIkvGVTA2IRk0JdWCpu57MNGm89nugrBZHo24",
+          "y": "KHsWAaidAIGCosDjRYDIk-94793e4xVEL4UwFxjWgB8"
+        }
+      }
+    ],
+    "authentication": ["#key-1"],
+    "assertionMethod": ["#key-1"]
+  }
+}
+```
+
+#### Verification Relationships
+
+`did:cid` agent DIDs support the following [[ref: DID-CORE]] verification relationships:
+
+| Relationship | Purpose |
+|---|---|
+| `authentication` | Proves control of the DID — used when the agent must authenticate itself to a verifier |
+| `assertionMethod` | Signs verifiable credentials and other assertions |
+
+The initial verification method is referenced as `#key-1`. After key rotation via an update operation, the new method identifier increments (`#key-2`, `#key-3`, etc.) and both `authentication` and `assertionMethod` are updated to reference the new key. Historical keys remain resolvable via [[ref: temporal resolution]].
+
+#### Authentication
+
+An [[ref: agent]] authenticates by signing a challenge with the private key corresponding to the method in its `authentication` verification relationship. A verifier resolves the agent's DID (at the time of the challenge) to obtain the then-active public key, then verifies the signature.
+
+This enables DID-native, decentralized authentication: any party that can resolve a `did:cid` DID can authenticate a `did:cid` agent without relying on a centralized identity provider or certificate authority.
+
+#### Service Endpoints
+
+Agent DIDs may include service endpoint entries per [[ref: DID-CORE]] Section 5.4. Services are declared in the `service` array and updated via standard DID update operations:
+
+```json
+{
+  "service": [
+    {
+      "id": "#lightning",
+      "type": "lightning",
+      "serviceEndpoint": "https://drawbridge.example.com/lightning"
+    }
+  ]
+}
+```
+
+Service endpoints are optional. Any DID Core-conformant service type may be used; `did:cid` imposes no constraints on service endpoint structure beyond those defined in [[ref: DID-CORE]].
+
+---
+
+### Asset DID Document
+
+A resolved [[ref: asset]] DID document identifies its controlling agent and carries application data in `didDocumentData`. It has no verification methods of its own:
+
+```json
+{
+  "didDocument": {
+    "@context": ["https://www.w3.org/ns/did/v1"],
+    "id": "did:cid:z3v8AuahaEdEZrY9BGfu4vntYjQECBvDHqCG3mPAfEbn6No7AHh",
+    "controller": "did:cid:bagaaieradidcs4hohalzexldr5mdmbmt553tqq3ifqd56mvhifppvyfdc32q"
+  },
+  "didDocumentData": {
+    "group": {
+      "name": "testgroup",
+      "members": []
+    }
+  },
+  "didDocumentRegistration": {
+    "version": 1,
+    "type": "asset",
+    "registry": "hyperswarm"
+  }
+}
+```
+
+Asset DIDs support transfer of control: a controller may update the `controller` field to a new agent DID via a valid update operation. Only one controller is valid at any given time.
+
+---
+
+### DID Document Metadata
+
+The `didDocumentMetadata` object conforms to [[ref: DID-CORE]] and includes Archon-specific extensions:
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `created` | DID Core | ISO 8601 timestamp of initial DID creation |
+| `updated` | DID Core | ISO 8601 timestamp of most recent update |
+| `deactivated` | DID Core | `true` if the DID has been revoked via a delete operation |
+| `versionId` | DID Core | CID of the most recent operation in the [[ref: operation chain]] |
+| `version` | DID Core | Integer sequence number of the most recent operation |
+| `confirmed` | Archon | `true` if the most recent operation is confirmed on the [[ref: registry]] |
+| `timestamp` | Archon | Blockchain timestamp bounds (blockchain registries only — see below) |
+
+#### Blockchain Timestamp Bounds
+
+For DIDs using blockchain-based registries (Bitcoin, Ethereum, Zcash, Solana, Filecoin), the `timestamp` object provides cryptographic upper and lower bounds on when the most recent operation was submitted, derived directly from block data:
+
+```json
+{
+  "didDocumentMetadata": {
+    "versionId": "bafkrei...",
+    "version": "2",
+    "confirmed": true,
+    "timestamp": {
+      "chain": "BTC",
+      "lowerBound": {
+        "time": 1705312800,
+        "timeISO": "2024-01-15T10:00:00Z",
+        "blockid": "00000000000000000002a7c4...",
+        "height": 826000
+      },
+      "upperBound": {
+        "time": 1705316400,
+        "timeISO": "2024-01-15T11:00:00Z",
+        "blockid": "00000000000000000001b8f2...",
+        "height": 826005,
+        "txid": "a1b2c3d4e5f6...",
+        "txidx": 42,
+        "batchid": "bafkrei...",
+        "opidx": 3
+      }
+    }
+  }
+}
+```
+
+**Lower bound** (`lowerBound`): Present when the operation included a `blockid` field at submission time, referencing a recent block. This proves the operation was created *after* that block was mined — establishing a cryptographic "not before" constraint.
+
+**Upper bound** (`upperBound`): Always present for confirmed blockchain operations. Identifies the block in which the operation batch was anchored, proving the operation existed *before* the subsequent block — establishing a "not after" constraint.
+
+Together, the bounds define an independently verifiable time window without relying on self-asserted client timestamps. The bounds can be verified by any party with access to the relevant blockchain, providing legal-grade timestamping for DID operations.
+
+::: note
+For [[ref: registry, registries]] without blockchain consensus (e.g., Hyperswarm), the `timestamp` object is absent. Operation ordering on such registries relies on the P2P consensus mechanism of the registry itself rather than external block timestamps.
+:::

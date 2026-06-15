@@ -6,6 +6,24 @@ Resolution is the operation of responding to a DID with a DID Document. If you t
 
 Given a DID and an optional resolution time, the resolver retrieves the associated [[ref: seed document]] from IPFS using the DID suffix as the CID, parsing it as plaintext JSON.
 
+### Resolution Options
+
+The `did:cid` method supports the following resolution options per [[ref: DID-CORE]]:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `versionTime` | ISO 8601 datetime | Resolve the DID document as it existed at or before this point in time |
+| `versionSequence` | integer | Resolve at a specific operation sequence number (1-indexed from creation) |
+| `versionId` | CID string | Resolve at the operation identified by this specific CID |
+
+If no option is specified, the resolver returns the most recent confirmed version.
+
+::: note
+`versionId` accepts the CID of any operation in the DID's [[ref: operation chain]], enabling pinpoint resolution at any historical state. This is the most precise resolution mode — `versionTime` and `versionSequence` both reduce to a `versionId` lookup internally once the target operation is identified.
+:::
+
+---
+
 ### Resolution Algorithm
 
 ```mermaid
