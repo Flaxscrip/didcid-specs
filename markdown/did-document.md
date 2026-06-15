@@ -1,21 +1,24 @@
 ## DID Document
 
-A `did:cid` resolution response conforms to the [[ref: DID-CORE]] document set structure and streams four top-level components to the client:
+A `did:cid` resolution response streams five top-level components to the client:
 
 ```json
 {
   "didDocument": { ... },
   "didDocumentMetadata": { ... },
   "didDocumentData": { ... },
-  "didDocumentRegistration": { ... }
+  "didDocumentRegistration": { ... },
+  "didResolutionMetadata": {
+    "retrieved": "2026-06-15T19:22:45.691Z"
+  }
 }
 ```
 
-::: note
-The resolved DID document is **computed at resolution time** — it does not exist in storage anywhere. The Gatekeeper stores only the individual operations (create, update, delete). On each resolution request, the Gatekeeper retrieves the creation operation from IPFS, fetches any subsequent update operations from its registry database, and replays them in [[ref: ordinal key]] order to reconstruct the current document state. No "latest version" is persisted; every resolution is a fresh computation from the canonical [[ref: operation chain]].
-:::
+`didDocument` and `didDocumentMetadata` conform to [[ref: DID-CORE]]. `didResolutionMetadata` conforms to the DID Resolution specification. `didDocumentData` and `didDocumentRegistration` are Archon extensions described in the Archon Extensions to DID Core section.
 
-`didDocumentData` and `didDocumentRegistration` are Archon extensions described in the Archon Extensions to DID Core section. The `didDocument` and `didDocumentMetadata` structures conform to [[ref: DID-CORE]].
+::: note
+The resolved DID document is **computed at resolution time** — it does not exist in storage anywhere. The Gatekeeper stores only the individual operations (create, update, delete). On each resolution request, the Gatekeeper retrieves the creation operation from IPFS, fetches any subsequent update operations from its registry database, and replays them in [[ref: ordinal key]] order to reconstruct the current document state. No "latest version" is persisted; every resolution is a fresh computation from the canonical [[ref: operation chain]]. The `didResolutionMetadata.retrieved` timestamp records when this computation occurred, making each resolution response a unique document.
+:::
 
 ---
 
@@ -113,7 +116,19 @@ Asset DIDs support transfer of control: a controller may update the `controller`
 
 ---
 
-### DID Document Metadata
+### Metadata Objects
+
+#### didResolutionMetadata
+
+The `didResolutionMetadata` object is added by the Gatekeeper at resolution time and conforms to the DID Resolution specification:
+
+| Field | Description |
+|-------|-------------|
+| `retrieved` | ISO 8601 timestamp of when this resolution was computed |
+
+Because `retrieved` is set fresh on every call, no two resolution responses for the same DID are identical — even when the underlying DID document has not changed.
+
+#### didDocumentMetadata
 
 The `didDocumentMetadata` object conforms to [[ref: DID-CORE]] and includes Archon-specific extensions:
 
