@@ -16,7 +16,10 @@
         "revocation.md",
         "resolution.md",
         "proof-verification.md",
-        "recovery.md"
+        "recovery.md",
+        "archon-extensions.md",
+        "security-considerations.md",
+        "privacy-considerations.md"
       ],
       "source": {
         "host": "github",
