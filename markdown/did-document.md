@@ -17,7 +17,7 @@ A `did:cid` resolution response streams five top-level components to the client:
 `didDocument` and `didDocumentMetadata` conform to [[ref: DID-CORE]]. `didResolutionMetadata` conforms to the DID Resolution specification. `didDocumentData` and `didDocumentRegistration` are Archon extensions described in the Archon Extensions to DID Core section.
 
 ::: note
-The resolved DID document is **computed at resolution time** — it does not exist in storage anywhere. The Gatekeeper stores only the individual operations (create, update, delete). On each resolution request, the Gatekeeper retrieves the creation operation from IPFS, fetches any subsequent update operations from its registry database, and replays them in [[ref: ordinal key]] order to reconstruct the current document state. No "latest version" is persisted; every resolution is a fresh computation from the canonical [[ref: operation chain]]. The `didResolutionMetadata.retrieved` timestamp records when this computation occurred, making each resolution response a unique document.
+The [[ref: operation chain]] is the authoritative source of truth for a `did:cid` DID. The Gatekeeper stores individual operations (create, update, delete) and reconstructs the DID document by replaying them in [[ref: ordinal key]] order at resolution time. Implementations MAY cache resolved documents for performance, but any cached result MUST remain consistent with a fresh replay of the canonical operation chain. The `didResolutionMetadata.retrieved` timestamp records when the resolution response was generated.
 :::
 
 ---
