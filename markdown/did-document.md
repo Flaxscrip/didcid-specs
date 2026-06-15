@@ -1,6 +1,6 @@
 ## DID Document
 
-A `did:cid` resolution response conforms to the [[ref: DID-CORE]] document set structure and returns four top-level components:
+A `did:cid` resolution response conforms to the [[ref: DID-CORE]] document set structure and streams four top-level components to the client:
 
 ```json
 {
@@ -10,6 +10,10 @@ A `did:cid` resolution response conforms to the [[ref: DID-CORE]] document set s
   "didDocumentRegistration": { ... }
 }
 ```
+
+::: note
+The resolved DID document is **computed at resolution time** — it does not exist in storage anywhere. The Gatekeeper stores only the individual operations (create, update, delete). On each resolution request, the Gatekeeper retrieves the creation operation from IPFS, fetches any subsequent update operations from its registry database, and replays them in [[ref: ordinal key]] order to reconstruct the current document state. No "latest version" is persisted; every resolution is a fresh computation from the canonical [[ref: operation chain]].
+:::
 
 `didDocumentData` and `didDocumentRegistration` are Archon extensions described in the Archon Extensions to DID Core section. The `didDocument` and `didDocumentMetadata` structures conform to [[ref: DID-CORE]].
 
