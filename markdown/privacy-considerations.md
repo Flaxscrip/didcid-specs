@@ -20,7 +20,7 @@ Implementations MUST NOT include sensitive personal data in the creation operati
 
 All `did:cid` DID documents are publicly resolvable by any party with access to a node. The full contents of `didDocument`, `didDocumentData`, and `didDocumentRegistration` are visible to any resolver without authentication.
 
-Implementations MUST NOT store unencrypted sensitive personal information in `didDocumentData`. Data that must be associated with a DID but kept private SHOULD be stored in the encrypted [[ref: vault]], where it is visible as ciphertext but inaccessible without the controller's private key.
+Implementations MUST NOT store unencrypted sensitive personal information in `didDocumentData`. Data that must be associated with a DID but kept private SHOULD be stored in an encrypted form — either as an identity backup asset or within a [[ref: vault]] — so that it is visible as ciphertext to resolvers but inaccessible without the appropriate key.
 
 ---
 
@@ -39,15 +39,24 @@ Once a credential is revealed in the manifest and the corresponding update opera
 
 ---
 
-### Vault Encryption
+### Vaults
 
-The `did:cid` method supports a [[ref: vault]] pattern for private credential storage. The vault is stored within `didDocumentData` but is encrypted with the DID's current private key. Vault contents are:
+A [[ref: vault]] is a shared encrypted file store associated with a group DID. Vault items are accessible to group members via individually derived keys. The `did:cid` method supports two membership configurations with distinct privacy properties:
 
-- **Publicly visible as ciphertext** — accessible to any resolver, but unreadable without the controller's key
-- **Decryptable only by the controller** — the holder of the DID's current private key
-- **Key-rotation sensitive** — after a key rotation, the vault MUST be re-encrypted with the new key to maintain access
+**Standard membership** — the member list is stored in plaintext within `didDocumentData.group.members`. Membership is publicly visible to any resolver.
 
-The vault pattern enables credential storage that is associated with the DID without being publicly disclosed, providing a privacy-preserving complement to the [[ref: DID Manifest]].
+**Secret membership** — the member list is encrypted and stored in `didDocumentData.group.encryptedMembers`. Each member receives their own individually derived access key. The following privacy properties hold:
+- Resolvers cannot determine who the members are
+- Members cannot prove or disprove the membership of other participants
+- Items added to the vault do not reveal the identity of the contributor
+
+Secret membership vaults are well suited to use cases that require both shared access and anonymity among participants — such as whistleblower submission systems, blind peer review, and anonymous committees.
+
+::: note
+**Identity backup** is a separate mechanism from the Vault. An identity backup is an encrypted asset DID referenced from `didDocumentData.vault`, containing the agent's credentials and relationships encrypted with the agent's own private key. It is a single-controller backup/restore mechanism, not a shared store. See DID Recovery for details.
+:::
+
+Both the vault and the identity backup store encrypted data that is publicly visible as ciphertext to any resolver. Neither exposes plaintext content without the appropriate key.
 
 ---
 
@@ -79,7 +88,7 @@ Real-world identity is associated with a DID only when the controller explicitly
 Implementations SHOULD apply the principle of data minimization throughout the DID lifecycle:
 
 - Include only the minimum necessary data in DID creation operations (public key and registry selection).
-- Prefer encrypted [[ref: vault]] storage over plaintext `didDocumentData` for non-public information.
+- Prefer encrypted storage (identity backup or [[ref: vault]]) over plaintext `didDocumentData` for non-public information.
 - Use [[ref: DID Manifest]] reveal mode only for credentials explicitly intended for permanent public disclosure.
 - Use [[ref: DID Manifest]] publish mode (existence-only) as a privacy-preserving alternative when full credential data need not be public.
 - Consider using separate DIDs for contexts where cross-context correlation is undesirable.
