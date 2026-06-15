@@ -24,9 +24,9 @@ The `did:cid` method introduces three structural elements that extend the [[ref:
 |-------|-------------|
 | `version` | Protocol version number. Enables forward-compatible evolution of the method. |
 | `type` | DID subject type: `"agent"` or `"asset"`. Determines the resolution and update rules that apply. |
-| `registry` | The [[ref: registry]] used to record update operations. Immutable after creation. |
+| `registry` | The [[ref: registry]] used to record update operations. Only one registry is active at a given time. |
 
-The `registry` field is the binding between a DID and its update ledger. Resolvers use it to determine where to look for update operations. Because it cannot be changed after creation, it prevents registry-switching attacks (see Security Considerations).
+The `registry` field is the binding between a DID and its update ledger. Resolvers use it to determine where to look for update operations. The registry may be changed by the controller via a valid signed update operation — only the most recently confirmed registry is active. A change of registry does not invalidate operations previously recorded on the prior registry; those remain part of the verifiable [[ref: operation chain]].
 
 ---
 
@@ -42,11 +42,12 @@ Most DID methods treat all DIDs identically — every DID is a self-controlled, 
 
 **[[ref: asset, Assets]]** are keyless DIDs. An asset:
 - Has no cryptographic keys of its own
-- Is controlled by exactly one [[ref: agent]] DID (specified in the `controller` field)
+- Is controlled by exactly one [[ref: agent]] DID at any given time (specified in the `controller` field)
+- Can be transferred to a new controller via a valid update operation signed by the current controller
 - Holds application data in `didDocumentData`
 - Represents entities that are acted upon: verifiable credentials, schemas, presentations, challenges, and responses
 
-This distinction enables a verifiable ownership graph: any observer can resolve an asset DID and determine its controller, then resolve the controller to verify the controlling agent's current key state. The relationship is declared at asset creation time and is publicly visible and immutable.
+This distinction enables a verifiable ownership graph: any observer can resolve an asset DID and determine its current controller, then resolve the controller to verify the controlling agent's current key state. Transfers are recorded in the [[ref: operation chain]] and resolvable at any historical point in time.
 
 ::: note
 The agent/asset distinction is expressed in `didDocumentRegistration.type`. Resolvers use this field to apply the correct creation, update, and resolution rules for the DID.
@@ -58,7 +59,7 @@ The agent/asset distinction is expressed in `didDocumentRegistration.type`. Reso
 
 [[def: didDocumentData, An Archon extension to the DID document set that provides an open, structured application data layer — a JSON object in which Keymaster features and higher-level applications store state that must be associated with the DID and synchronized across the network]]
 
-[[ref: DID-CORE]] defines no general-purpose data payload for DID documents. The `did:cid` method adds `didDocumentData` to the document set as an open extension point. Its content is not constrained by the method specification — any Keymaster feature or application layer can read and write properties within it using standard DID update operations.
+[[ref: DID-CORE]] defines a `service` property for attaching typed service endpoint references to a DID document — external URIs pointing to services associated with the DID subject. `didDocumentData` serves a distinct purpose: it is an inline structured data store for arbitrary JSON state that must be cryptographically bound to the DID itself, versioned alongside it, and resolvable at any point in its history. The `did:cid` method adds `didDocumentData` to the document set as an open extension point. Its content is not constrained by the method specification — any Keymaster feature or application layer can read and write properties within it using standard DID update operations.
 
 The general pattern is that each higher-level feature reserves a named property within `didDocumentData`:
 
@@ -78,7 +79,7 @@ The following `didDocumentData` properties are used by the Archon platform as of
 
 | Property | Feature | Description |
 |----------|---------|-------------|
-| `vault` | Credential vault | Encrypted archive of held credentials (see DID Recovery) |
+| `vault` | Shared vault | Shared encrypted file store with vault items and member access control |
 | `manifest` | DID Manifest | Selectively disclosed public credentials (described below) |
 | `nostr` | Nostr integration | Agent's Nostr identity (`npub`, public key) |
 | `contact` | Identity metadata | Human-readable name, Bitcoin address, and other contact fields |
@@ -97,7 +98,7 @@ The manifest is an object within `didDocumentData.manifest` where each key is th
 | **Publish** | `false` | Credential DID reference | Announces credential ownership without exposing content |
 | **Reveal** | `true` | Full Verifiable Credential | Makes the complete credential publicly verifiable by any resolver |
 
-Manifest entries are managed via the Archon MCP server (`archon_publish_credential`, `archon_reveal_credential`, `archon_unpublish_credential`) or equivalent Keymaster API and CLI calls. Each operation generates a DID update that modifies `didDocumentData.manifest` and is anchored to the [[ref: registry]].
+Manifest entries are managed via the Archon Keymaster. Each valid operation generates a DID update that modifies `didDocumentData.manifest` and is anchored to the [[ref: registry]].
 
 A partial example of a resolved DID with a revealed credential in the manifest:
 

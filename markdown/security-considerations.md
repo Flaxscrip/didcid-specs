@@ -52,8 +52,12 @@ The integrity of DID update history depends on the [[ref: registry]] specified i
 | **Bitcoin mainnet** | Probabilistic; ~6 confirmations (~60 min) | Highest economic security; reorganization risk decreases exponentially with block depth |
 | **Bitcoin Signet / Testnet** | Same model; lower economic stake | Suitable for development and testing; not appropriate for production identity |
 | **Hyperswarm** | P2P DHT-based ordering | Faster settlement; weaker Byzantine fault tolerance; suitable for lower-stakes updates |
+| **Ethereum** | Probabilistic PoS finality (~12 s slots) | High economic security; large validator set; EVM-compatible smart contract anchoring |
+| **Zcash** | PoW probabilistic finality | Strong privacy properties; shielded transaction support |
+| **Solana** | PoH / Tower BFT; ~400 ms slots | Very high throughput; low transaction costs; suitable for high-frequency update patterns |
+| **Filecoin** | EC consensus; ~30 s epochs | Storage-native anchoring; aligns with IPFS-based creation layer |
 
-The `registry` field in the creation operation is **immutable** — once a DID is created with a specified registry, that registry cannot be changed without creating an entirely new DID. This prevents registry-switching attacks where an adversary attempts to redirect update resolution to a weaker registry after DID establishment.
+The `registry` field may be changed by the controller via a valid signed update operation — only the most recently confirmed registry is active at any given time. A registry change does not invalidate operations previously recorded on the prior registry; those remain part of the verifiable [[ref: operation chain]] and are still consulted during historical resolution. Resolvers MUST follow the current registry for new operations and MUST consult prior registries when replaying the operation history up to any point before the registry change.
 
 ::: note
 Node operators SHOULD document the registries they support and their trusted peer node policies. Resolvers that do not support a DID's specified registry MUST forward the resolution request to a trusted node rather than returning a partial or stale result.
@@ -125,6 +129,21 @@ Mitigations:
 - Resolvers in high-security contexts SHOULD run their own node directly connected to the DID's specified registry.
 - Clients SHOULD validate that the returned document's `versionId` is consistent with the expected [[ref: operation chain]].
 - Node operators SHOULD monitor registry sync status and alert on significant lag.
+
+---
+
+### Keymaster and Gatekeeper Trust Model
+
+The `did:cid` method separates key custody from network operations into two distinct components with a well-defined trust boundary.
+
+The **[[def: Keymaster, The client-side wallet component that holds private keys, signs operations locally, and submits them to a Gatekeeper node — private keys never leave the Keymaster]]** holds private keys exclusively on the client and signs all operations locally before submission. The **[[def: Gatekeeper, The server-side node component that interfaces with IPFS, registries, and the broader network — it receives only signed operations and never has access to private keys]]** is the network-facing node that submits operations to IPFS and registries and serves DID resolution responses.
+
+Key trust properties of this separation:
+
+- **Keymaster users must trust their Gatekeeper** — The Gatekeeper is responsible for faithfully submitting operations to IPFS and registries and for returning accurate resolution results. A compromised Gatekeeper could delay or drop operations, or return stale DID documents. It cannot, however, forge operations, alter signed content, or access private keys.
+- **Gatekeepers are interchangeable** — Because the Keymaster signs all operations locally with keys that never leave the client, a controller can switch to a different Gatekeeper at any time — for better availability, geographic proximity, or greater institutional trust — without any change to their DID or credentials.
+- **Self-sovereign deployment** — Controllers who require maximum trust and control can operate their own Gatekeeper node. This eliminates reliance on any third party while maintaining full compatibility with the network.
+- **SaaS node assurance** — Controllers using a third-party hosted Gatekeeper can do so with the assurance that the node operator cannot access their private keys, cannot sign operations on their behalf, and cannot update or revoke their DID without a valid signature from the controller's Keymaster.
 
 ---
 
