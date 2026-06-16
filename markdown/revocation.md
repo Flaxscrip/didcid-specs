@@ -2,7 +2,7 @@
 
 [[def: delete operation, A signed operation that permanently deactivates a DID by removing its controller, making the DID unresolvable for active use]]
 
-Revoking a DID is a special kind of Update that results in the termination of the DID. Revoked DIDs cannot be updated because they have no controller, therefore they **cannot be recovered** once revoked. Revoked DIDs can be resolved without error, but resolvers will return a document set with the `didMetadata.deactivated` property set to `true`. The `didDocument` and `didDocumentData` properties will be set to empty.
+Revoking a DID is a special kind of Update that results in the termination of the DID. Revoked DIDs cannot be updated because they have no controller, therefore they **cannot be recovered** once revoked. Revoked DIDs can be resolved without error, but resolvers will return a document set with the `didMetadata.deactivated` property set to `true`. The resolved `didDocument` contains only the `id` field (the DID itself); `didDocumentData` is returned as an empty object.
 
 ### Revocation Flow
 
@@ -52,7 +52,7 @@ After revocation is confirmed on the DID's registry, resolving the DID will retu
         "created": "2026-01-14T19:32:24Z",
         "deleted": "2026-01-14T19:34:33Z",
         "versionId": "bagaaierats6ttxvpx2l3tat25ota7z7335akfd2iup5loajsdlqcwismkgpq",
-        "version": "2",
+        "versionSequence": "2",
         "confirmed": true,
         "isOwned": false
     },

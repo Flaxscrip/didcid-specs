@@ -82,7 +82,7 @@ The current specification requires `EcdsaSecp256k1Signature2019` for all proofs.
 The `did:cid` method makes the following key management design decisions:
 
 - **Client-side signing only** — Private keys are never transmitted to nodes. Clients sign operations locally and submit only the signed operation and the corresponding public key.
-- **HD key derivation** — Keys are derived using BIP-32 hierarchical deterministic derivation from a BIP-39 seed phrase. Implementations SHOULD use hardened derivation paths to prevent child key exposure from compromising the parent key.
+- **HD key derivation** — Clients SHOULD derive keys using BIP-32 hierarchical deterministic derivation from a BIP-39 seed phrase. Implementations SHOULD use hardened derivation paths to prevent child key exposure from compromising the parent key.
 - **No server-side key custody** — Nodes have no access to private keys and cannot sign on behalf of DID controllers.
 
 After a key rotation (via an update operation), credentials signed with the previous key remain verifiable through [[ref: temporal resolution]] — the historical key state is preserved and resolvable at any prior version time.

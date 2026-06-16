@@ -138,7 +138,7 @@ The `didDocumentMetadata` object conforms to [[ref: DID-CORE]] and includes Arch
 | `updated` | DID Core | ISO 8601 timestamp of most recent update |
 | `deactivated` | DID Core | `true` if the DID has been revoked via a delete operation |
 | `versionId` | DID Core | CID of the most recent operation in the [[ref: operation chain]] |
-| `version` | DID Core | Integer sequence number of the most recent operation |
+| `versionSequence` | Archon | Sequence number of the most recent operation, returned as a string |
 | `confirmed` | Archon | `true` if the most recent operation is confirmed on the [[ref: registry]] |
 | `timestamp` | Archon | Blockchain timestamp bounds (blockchain registries only — see below) |
 
@@ -150,7 +150,7 @@ For DIDs using blockchain-based registries (Bitcoin, Ethereum, Zcash, Solana, Fi
 {
   "didDocumentMetadata": {
     "versionId": "bafkrei...",
-    "version": "2",
+    "versionSequence": "2",
     "confirmed": true,
     "timestamp": {
       "chain": "BTC",
